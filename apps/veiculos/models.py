@@ -46,8 +46,6 @@ class Veiculo(models.Model):
     motivo_inatividade = models.CharField(
         max_length=50,
         choices=[(m, m) for m in MOTIVO_INATIVIDADE],
-        blank=True,
-        null=True
     )
 
     def __str__(self):

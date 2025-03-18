@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_http_methods
-from .models import Veiculo, validar_prefixo
+from .models import Veiculo, validar_prefixo, validar_placa, validar_motivo_inatividade
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -20,9 +20,22 @@ def criar_veiculo(request):
             validar_prefixo(data["prefixo"], data["tipo"])
         except ValidationError as e:
             return JsonResponse({"erro": str(e)}, status=400)
-        if data["status"] == "Inativo":
-            if data.get("motivo_inatividade") not in ["Em Manutenção", "Na Garagem"]:
-                return JsonResponse({"erro": "Status 'Inativo' deve ter motivo 'Em Manutenção' ou 'Na Garagem'."}, status=400)
+        try:
+            validar_placa(data["placa"])
+        except ValidationError as e:
+            return JsonResponse({"erro": str(e)}, status=400)
+
+        status = data["status"]
+        motivo_inatividade = data.get("motivo_inatividade")
+        if status == "Inativo":
+            if not motivo_inatividade:
+                return JsonResponse({"erro": "Motivo de inatividade é obrigatório quando o status é 'Inativo'."}, status=400)
+            try:
+                validar_motivo_inatividade(motivo_inatividade, status)
+            except ValidationError as e:
+                return JsonResponse({"erro": str(e)}, status=400)
+        else:
+            motivo_inatividade = None 
         if Veiculo.objects.filter(placa=data["placa"]).exists():
             return JsonResponse({"erro": "placa ja cadastrada."}, status=400)
         veiculo = Veiculo.objects.create(
@@ -91,7 +104,7 @@ logger = logging.getLogger(__name__)
 def quantidade_de_veiculos_inativos(request):
     try:
         _ = request.method 
-        veiculos_inativos = Veiculo.objects.filter(status="Inativo").values("status", "motivo_inatividade")
+        veiculos_inativos = Veiculo.objects.filter(status="Inativo").values("status","tipo","motivo_inatividade")
         if not veiculos_inativos:
             return JsonResponse({"erro": "nenhum veiculo inativo encontrado."}, status=404)
         df = pd.DataFrame(list(veiculos_inativos))
@@ -102,11 +115,13 @@ def quantidade_de_veiculos_inativos(request):
         total_inativos = df.shape[0]
         total_na_garagem = df[df["motivo_inatividade"] == "na garagem"].shape[0]
         total_em_manutencao = df[df["motivo_inatividade"] == "em manutenção"].shape[0]
+        tipos_inativos = df["tipo"].value_counts().to_dict()
         logger.info(f"Total inativos: {total_inativos}, Na garagem: {total_na_garagem}, em manutencao: {total_em_manutencao}")
         return JsonResponse({
             "total_inativos": total_inativos,
             "na_garagem": total_na_garagem,
-            "em_manutencao": total_em_manutencao
+            "em_manutencao": total_em_manutencao,
+            "inativos_por_tipo": tipos_inativos
         })
     except Exception as e:
         logger.error(f"erro na funcao 'quantidade_de_veiculos_inativos': {str(e)}")
@@ -133,7 +148,7 @@ def quantidade_de_veiculos_ativos(request):
 def retorna_detalhes_veiculos(request):
     try:
         _ = request.method 
-        infos_importantes = Veiculo.objects.values("placa", "tipo", "status", "motivo_inatividade")
+        infos_importantes = Veiculo.objects.values("placa","prefixo","tipo", "status", "motivo_inatividade")
         df = pd.DataFrame(list(infos_importantes))
         return JsonResponse(df.to_dict(orient="records"), safe=False)
     except Exception as e:
