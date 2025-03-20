@@ -18,7 +18,6 @@ TIPOS_VEICULO = {
 }
 
 def buscar_placas_existentes():
-    """ Busca as placas já cadastradas para evitar duplicação. """
     try:
         response = requests.get(API_URL, timeout=5)
         if response.status_code == 200:
@@ -31,7 +30,6 @@ def buscar_placas_existentes():
         return set()
 
 def gerar_placa(existentes):
-    """ Gera uma placa única, evitando duplicadas. """
     padrao_novo = r"^[A-Z]{3}[0-9]{1}[A-Z]{1}[0-9]{2}$"
     padrao_antigo = r"^[A-Z]{3}-[0-9]{4}$"
 
@@ -46,13 +44,11 @@ def gerar_placa(existentes):
             return placa
 
 def gerar_combinacoes_unicas():
-    """ Gera combinações únicas de tipos de veículos. """
     combinacoes = list(TIPOS_VEICULO.keys())
     random.shuffle(combinacoes)
     return combinacoes
 
 def gerar_veiculo(existentes, combinacoes_usadas):
-    """ Gera um veículo sempre com status inativo e motivo 'Em manutenção'. """
     while True:
         if not combinacoes_usadas:
             print("⚠️ Todas as combinações foram usadas. Repetindo algumas para atingir o limite!")
@@ -65,14 +61,13 @@ def gerar_veiculo(existentes, combinacoes_usadas):
             "placa": gerar_placa(existentes),
             "tipo": tipo,
             "prefixo": prefixo,
-            "status": "Inativo",  # Sempre inativo
-            "motivo_inatividade": "Em manutenção"  # Sempre em manutenção
+            "status": "Inativo",  
+            "motivo_inatividade": "Em manutenção" 
         }
 
         return veiculo
 
 def cadastrar_veiculo(veiculo):
-    """ Envia o veículo para cadastro na API. """
     try:
         response = requests.post(API_URL, json=veiculo, timeout=5)
         if response.status_code == 201:
@@ -83,7 +78,6 @@ def cadastrar_veiculo(veiculo):
         print(f"🚨 Falha na requisição para {veiculo['placa']}: {e}")
 
 def cadastrar_veiculos():
-    """ Controla o processo de geração e envio dos veículos. """
     existentes = buscar_placas_existentes()  
     combinacoes_usadas = set(gerar_combinacoes_unicas())  
 

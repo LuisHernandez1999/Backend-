@@ -90,3 +90,40 @@ def retorna_detalhes_colaboradores(request):
         return JsonResponse(colaboradores_data, safe=False)
     except Exception as e:
         return JsonResponse({"erro": str(e)}, status=400)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def colaboradores_por_turno(request):
+    _ = request.method 
+    try:
+        colaboradores_query_set = Colaborador.objects.exclude(
+            nome=None, matricula=None, pa=None, turno=None, tipo=None
+        )
+        noturnos = colaboradores_query_set.filter(turno="Noturno")
+        vespertinos = colaboradores_query_set.filter(turno="Vespertino")
+        matutinos = colaboradores_query_set.filter(turno="Matutino")
+        quantidade_de_motoristas = colaboradores_query_set.filter(tipo="Motorista").count()
+        quantidade_de_coletores = colaboradores_query_set.filter(tipo="Coletor").count()
+        quantidade_de_operadores = colaboradores_query_set.filter(tipo="Operador").count()
+
+        return JsonResponse({
+            "noturnos": {
+                "quantidade": noturnos.count(),
+                "colaboradores": list(noturnos.values("nome", "matricula"))
+            },
+            "vespertinos": {
+                "quantidade": vespertinos.count(),
+                "colaboradores": list(vespertinos.values("nome", "matricula"))
+            },
+            "matutinos": {
+                "quantidade": matutinos.count(),
+                "colaboradores": list(matutinos.values("nome", "matricula"))
+            },
+            "quantidade_de_motoristas": quantidade_de_motoristas,
+            "quantidade_de_coletores": quantidade_de_coletores,
+            "quantidade_de_operadores": quantidade_de_operadores
+        })
+
+    except Exception as e:
+        return JsonResponse({"erro": str(e)}, status=400)
+      
