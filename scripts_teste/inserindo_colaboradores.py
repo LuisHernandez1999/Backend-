@@ -14,7 +14,7 @@ tipos = ["Motorista", "Coletor", "Operador"]
 matriculas_geradas = set()
 NUM_COLABORADORES = 2000
 
-# Criar lista de colaboradores antes de enviar para evitar processamento extra
+
 colaboradores = []
 for _ in range(NUM_COLABORADORES):
     nome_completo = f"{random.choice(nomes)} {random.choice(sobrenomes)}"
@@ -44,6 +44,6 @@ def cadastrar_colaborador(colaborador):
         print(f"❌ Erro ao cadastrar {colaborador['nome']}: {response.text}")
 
 
-# Usar múltiplas threads para enviar as requisições ao mesmo tempo
+
 with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
     executor.map(cadastrar_colaborador, colaboradores)

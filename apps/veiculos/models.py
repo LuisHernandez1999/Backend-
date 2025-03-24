@@ -44,7 +44,7 @@ class Veiculo(models.Model):
     prefixo = models.CharField(max_length=50, choices=[(x, x) for x in PREFIXO])
     status = models.CharField(max_length=50, choices=[(w, w) for w in STATUS], validators=[validar_status])
     motivo_inatividade = models.CharField(
-        max_length=50,
+        max_length=10,
         choices=[(m, m) for m in MOTIVO_INATIVIDADE],
     )
 
