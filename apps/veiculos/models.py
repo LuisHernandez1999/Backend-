@@ -2,9 +2,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 import re
 
-from django.core.exceptions import ValidationError
-import re
-
 def validar_placa(value):
     padrao_novo = r"^[A-Z]{3}[0-9]{1}[A-Z]{1}[0-9]{2}$"  
     padrao_antigo = r"^[A-Z]{3}-[0-9]{4}$"  
@@ -39,12 +36,12 @@ class Veiculo(models.Model):
     STATUS = ["Ativo", "Inativo"]
     MOTIVO_INATIVIDADE = ["Em manutenção", "Na garagem"]
 
-    placa = models.CharField(max_length=8, validators=[validar_placa])
+    placa_veiculo = models.CharField(max_length=8, validators=[validar_placa])
     tipo = models.CharField(max_length=50, choices=[(y, y) for y in TIPO])
     prefixo = models.CharField(max_length=50, choices=[(x, x) for x in PREFIXO])
     status = models.CharField(max_length=50, choices=[(w, w) for w in STATUS], validators=[validar_status])
     motivo_inatividade = models.CharField(
-        max_length=10,
+        max_length=1,
         choices=[(m, m) for m in MOTIVO_INATIVIDADE],
     )
 
